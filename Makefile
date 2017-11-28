@@ -46,6 +46,7 @@ copy-files:
 	# runners
 	install -d -m 755 $(DESTDIR)/srv/modules/runners
 	install -m 644 srv/modules/runners/*.py* $(DESTDIR)/srv/modules/runners/
+	VERSION=$$(awk '/^Version/ {print $$2}' deepsea.spec); sed -i "s/DEVVERSION/$$VERSION/" $(DESTDIR)/srv/modules/runners/deepsea.py
 	# pillar
 	install -d -m 755 $(DESTDIR)/srv/pillar/ceph
 	install -d -m 755 $(DESTDIR)/srv/pillar/ceph/benchmarks
