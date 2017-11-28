@@ -33,6 +33,7 @@ Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  salt-master
 BuildRequires:  python-setuptools
+BuildRequires:  git
 Requires:       salt-master
 Requires:       salt-minion
 Requires:       salt-api

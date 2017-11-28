@@ -10,7 +10,7 @@ usage:
 pyc:
 	find srv/ -name '*.py' -exec python -m py_compile {} \;
 	# deepsea-cli
-	VERSION=$$(awk '/^Version/ {print $$2}' deepsea.spec); sed -i "s/DEVVERSION/$$VERSION/" setup.py
+	VERSION=$$(git describe --tags | sed 's/^v//' | sed 's/-/+/' | sed 's/-/./'); sed -i "s/DEVVERSION/$$VERSION/" setup.py
 	python setup.py build
 
 copy-files:
@@ -570,7 +570,7 @@ copy-files:
 	-chown salt:salt $(DESTDIR)/srv/salt/ceph/configuration/files/ceph.conf.checksum || true
 
 install: copy-files
-	VERSION=$$(awk '/^Version/ {print $$2}' deepsea.spec); sed -i "s/DEVVERSION/$$VERSION/" setup.py
+	VERSION=$$(git describe --tags | sed 's/^v//' | sed 's/-/+/' | sed 's/-/./'); sed -i "s/DEVVERSION/$$VERSION/" setup.py
 	sed -i '/^sharedsecret: /s!{{ shared_secret }}!'`cat /proc/sys/kernel/random/uuid`'!' $(DESTDIR)/etc/salt/master.d/sharedsecret.conf
 	chown salt:salt $(DESTDIR)/etc/salt/master.d/*
 	echo "deepsea_minions: '*'" > /srv/pillar/ceph/deepsea_minions.sls
@@ -588,7 +588,7 @@ rpm: tarball test
 
 # Removing test dependency until resolved
 tarball:
-	VERSION=`awk '/^Version/ {print $$2}' deepsea.spec`; \
+	VERSION=`git describe --tags | sed 's/^v//' | sed 's/-/+/' | sed 's/-/./'`; \
 	git archive --prefix deepsea-$$VERSION/ -o ~/rpmbuild/SOURCES/deepsea-$$VERSION.tar.bz2 HEAD
 
 test:
