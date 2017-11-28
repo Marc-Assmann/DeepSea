@@ -33,7 +33,6 @@ Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  salt-master
 BuildRequires:  python-setuptools
-BuildRequires:  git
 Requires:       salt-master
 Requires:       salt-minion
 Requires:       salt-api
@@ -53,12 +52,12 @@ A collection of Salt files providing a deployment of Ceph as a series of stages.
 %setup
 
 %build
-make DESTDIR=%{buildroot} pyc
+make DESTDIR=%{buildroot} pyc VERSION=%{version}
 # rewrite version number in deepsea.spec that lives inside the tarball
 sed -i 's/^Version:.*/Version: %{version}/g' deepsea.spec
 
 %install
-make DESTDIR=%{buildroot} DOCDIR=%{_docdir} copy-files
+make DESTDIR=%{buildroot} DOCDIR=%{_docdir} copy-files VERSION=%{version}
 %__rm -f %{buildroot}/%{_mandir}/man?/*.gz
 %__gzip %{buildroot}/%{_mandir}/man?/deepsea*
 python setup.py install --prefix=%{_prefix} --root=%{buildroot}
