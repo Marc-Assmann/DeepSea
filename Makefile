@@ -589,7 +589,13 @@ rpm: tarball test
 
 # Removing test dependency until resolved
 tarball:
-	git archive --prefix deepsea-$(VERSION)/ -o ~/rpmbuild/SOURCES/deepsea-$(VERSION).tar.bz2 HEAD
+	$(eval TEMPDIR := $(shell mktemp -d))
+	mkdir $(TEMPDIR)/deepsea-$(VERSION)
+	git archive HEAD | tar -x -C $(TEMPDIR)/deepsea-$(VERSION)
+	sed -i "s/DEVVERSION/$(VERSION)/" $(TEMPDIR)/deepsea-$(VERSION)/setup.py
+	sed -i "s/DEVVERSION/$(VERSION)/" $(TEMPDIR)/deepsea-$(VERSION)/srv/modules/runners/deepsea.py
+	tar -cjf ~/rpmbuild/SOURCES/deepsea-$(VERSION).tar.bz2 -C $(TEMPDIR) .
+	rm -r $(TEMPDIR)
 
 test:
 	tox -e py27
