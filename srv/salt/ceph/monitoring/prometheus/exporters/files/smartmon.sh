@@ -85,6 +85,7 @@ parse_smartctl_attributes() {
 parse_smartctl_info() {
   local -i smart_available=0 smart_enabled=0 smart_healthy=0
   local disk="$1" disk_type="$2"
+  local current_temperature=""
   while read line ; do
     info_type="$(echo "${line}" | cut -f1 -d: | tr ' ' '_')"
     info_value="$(echo "${line}" | cut -f2- -d: | sed 's/^ \+//g')"
@@ -97,6 +98,7 @@ parse_smartctl_info() {
       Product) product="${info_value}" ;;
       Revision) revision="${info_value}" ;;
       Logical_Unit_id) lun_id="${info_value}" ;;
+      Current_Drive_Temperature) current_temperature="${info_value}" ;;
     esac
     if [[ "${info_type}" == 'SMART_support_is' ]] ; then
       case "${info_value:0:7}" in
@@ -115,6 +117,12 @@ parse_smartctl_info() {
       esac
     fi
   done
+  if [[ -n "${current_temperature}" ]] ; then
+     current_temperature=$(echo "$current_temperature" | cut -f1 -d' ')
+     if [[ -n "${current_temperature}" ]] ; then
+       echo "temperature_celsius_raw_value{disk=\"${disk}\",type=\"${disk_type}\"} ${current_temperature}"
+     fi
+  fi
   if [[ -n "${model_family}" ]] ; then
     echo "device_info{disk=\"${disk}\",type=\"${disk_type}\",model_family=\"${model_family}\",device_model=\"${device_model}\",serial_number=\"${serial_number}\",firmware_version=\"${fw_version}\"} 1"
   elif [[ -n "${vendor}" ]] ; then
@@ -154,9 +162,13 @@ device_list="$(/usr/sbin/smartctl --scan-open | awk '{print $1 "|" $3}')"
 for device in ${device_list}; do
   disk="$(echo ${device} | cut -f1 -d'|')"
   type="$(echo ${device} | cut -f2 -d'|')"
+  type="cciss,0"
   echo "smartctl_run{disk=\"${disk}\",type=\"${type}\"}" $(TZ=UTC date '+%s')
   # Get the SMART information and health
-  /usr/sbin/smartctl -i -H -d "${type}" "${disk}" | parse_smartctl_info "${disk}" "${type}"
+  /usr/sbin/smartctl -A -i -H -d "${type}" "${disk}" | parse_smartctl_info "${disk}" "${type}"
   # Get the SMART attributes
   /usr/sbin/smartctl -A -d "${type}" "${disk}" | parse_smartctl_attributes "${disk}" "${type}"
 done | format_output
+
+
+
